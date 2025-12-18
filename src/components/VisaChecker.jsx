@@ -63,15 +63,7 @@ const VisaChecker = () => {
     const resultType = isFinished ? calculateResult() : null;
 
     // Contact URL generation
-    // Contact URL generation
-    const getContactUrl = (type) => {
-        if (type === 'qualified') {
-            return 'https://calendly.com/fanvankai/30min?month=2025-12';
-        }
-        const subject = encodeURIComponent('特定技能ビザ診断結果');
-        const paramResult = encodeURIComponent(type);
-        return `https://mayuha.net/contact-ja.html?subject=${subject}&result=${paramResult}`;
-    };
+
 
     return (
         <div className="max-w-2xl mx-auto space-y-8">
@@ -164,17 +156,25 @@ const VisaChecker = () => {
                         </p>
 
                         <div className="flex justify-center">
-                            <a
-                                href={getContactUrl(resultType)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`inline-flex items-center justify-center px-8 py-4 rounded-full font-bold text-lg text-white shadow-lg transition-transform hover:-translate-y-1 ${resultType === 'qualified'
-                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-200'
-                                    : 'bg-gradient-to-r from-orange-400 to-orange-500 hover:shadow-orange-100' // Friendlier orange
-                                    }`}
-                            >
-                                {resultType === 'qualified' ? '有料サポートに進む' : '無料で専門家に相談する'}
-                            </a>
+                            {resultType === 'qualified' ? (
+                                <a
+                                    href="https://calendly.com/fanvankai/30min?month=2025-12"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold text-lg text-white shadow-lg transition-transform hover:-translate-y-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-200"
+                                >
+                                    今すぐ相談を予約する
+                                </a>
+                            ) : (
+                                <a
+                                    href="https://mayuha.net/contact-ja.html?subject=%E7%89%B9%E5%AE%9A%E6%8A%80%E8%83%BD%E3%83%93%E3%82%B6%E8%A8%BA%E6%96%AD%E7%B5%90%E6%9E%9C&result=warning"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold text-lg text-white shadow-lg transition-transform hover:-translate-y-1 bg-gradient-to-r from-orange-400 to-orange-500 hover:shadow-orange-100"
+                                >
+                                    無料で専門家に相談する
+                                </a>
+                            )}
                         </div>
                     </div>
 
@@ -203,14 +203,25 @@ const VisaChecker = () => {
                                 <p className="text-xs text-slate-400 mt-1">※ 成功報酬制プランもございます</p>
                             </div>
 
-                            <a
-                                href={getContactUrl(resultType)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-block w-full sm:w-auto px-8 py-4 bg-white text-slate-900 font-bold rounded-lg hover:bg-blue-50 transition-colors shadow-lg"
-                            >
-                                今すぐ相談を予約する
-                            </a>
+                            {resultType === 'qualified' ? (
+                                <a
+                                    href="https://calendly.com/fanvankai/30min?month=2025-12"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block w-full sm:w-auto px-8 py-4 bg-white text-slate-900 font-bold rounded-lg hover:bg-blue-50 transition-colors shadow-lg"
+                                >
+                                    今すぐ相談を予約する
+                                </a>
+                            ) : (
+                                <a
+                                    href="https://mayuha.net/contact-ja.html?subject=%E7%89%B9%E5%AE%9A%E6%8A%80%E8%83%BD%E3%83%93%E3%82%B6%E8%A8%BA%E6%96%AD%E7%B5%90%E6%9E%9C&result=warning"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block w-full sm:w-auto px-8 py-4 bg-white text-slate-900 font-bold rounded-lg hover:bg-blue-50 transition-colors shadow-lg"
+                                >
+                                    無料で専門家に相談する
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>
