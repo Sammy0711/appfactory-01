@@ -1,25 +1,21 @@
 // src/components/VisaChecker.jsx
 import React, { useMemo, useState } from "react";
 
-/**
- * 特定技能ビザ 要件判定ツール
- * - 結果画面のCTAは「JSXブロックごと完全分離」(if/else return) で実装
- * - href の三項演算子切替は禁止要件に従い未使用
- */
 const VisaChecker = () => {
-    // 質問ID定義（拡張しやすいように固定キーで管理）
+    // 質問ID定義
     const QUESTION_IDS = useMemo(
         () => ["age", "skill", "language", "record", "health"],
         []
     );
 
-    // 初期状態
+    // ステート管理
+    const [currentStep, setCurrentStep] = useState(0);
     const [answers, setAnswers] = useState({
-        age: null, // 18歳以上なら true
-        skill: null, // 技能試験合格 or 技能実習2号修了なら true
-        language: null, // 日本語試験合格 or 技能実習2号修了なら true
-        record: null, // 犯罪歴・強制退去など「ない」なら true
-        health: null, // 健康状態に問題ないなら true
+        age: null,
+        skill: null,
+        language: null,
+        record: null,
+        health: null,
     });
 
     const questions = useMemo(
@@ -36,8 +32,7 @@ const VisaChecker = () => {
             {
                 id: "record",
                 text: "過去に日本で強制退去処分を受けたことや、犯罪歴はありませんか？",
-                hint:
-                    "※「ありません」＝「はい」を選択してください（問題がない場合）。",
+                hint: "※「ありません」＝「はい」を選択してください（問題がない場合）。",
             },
             {
                 id: "health",
@@ -47,8 +42,23 @@ const VisaChecker = () => {
         []
     );
 
-    const handleAnswer = (id, value) => {
-        setAnswers((prev) => ({ ...prev, [id]: value }));
+    // 回答処理
+    const handleAnswer = (value) => {
+        const currentQuestionId = questions[currentStep].id;
+        setAnswers((prev) => ({ ...prev, [currentQuestionId]: value }));
+
+        // 次のステップへ（少し待ってから遷移）
+        if (currentStep < questions.length) {
+            setTimeout(() => {
+                setCurrentStep((prev) => prev + 1);
+            }, 250);
+        }
+    };
+
+    const handleBack = () => {
+        if (currentStep > 0) {
+            setCurrentStep((prev) => prev - 1);
+        }
     };
 
     const resetAll = () => {
@@ -59,43 +69,35 @@ const VisaChecker = () => {
             record: null,
             health: null,
         });
+        setCurrentStep(0);
     };
 
     // 完了判定
-    const isFinished = useMemo(
-        () => QUESTION_IDS.every((id) => answers[id] !== null),
-        [answers, QUESTION_IDS]
-    );
+    const isFinished = currentStep === questions.length;
 
-    /**
-     * 判定ロジック（必須要件）
-     * - 全て true のときのみ isSuccess = true
-     * - record は質問文が「ありませんか？」なので、問題がない場合に true を選ぶ仕様で統一
-     */
+    // 合格判定
     const isSuccess = useMemo(() => {
         if (!isFinished) return false;
         return QUESTION_IDS.every((id) => answers[id] === true);
     }, [answers, isFinished, QUESTION_IDS]);
 
-    // 結果表示コンポーネント（CTAはif/elseでJSX完全分離）
-    const ResultView = () => {
-        if (!isFinished) return null;
+    // 進捗率
+    const progress = Math.min(100, (currentStep / questions.length) * 100);
 
-        // ====== 合格 (Success) ======
+    // ====== 結果表示コンポーネント ======
+    const ResultView = () => {
+        // 合格（Success）
         if (isSuccess) {
             return (
                 <div className="p-6 sm:p-8 animate-in fade-in slide-in-from-top-4 duration-500 bg-emerald-50 border-t border-emerald-100">
                     <div className="text-center space-y-4">
                         <div className="text-4xl mb-2">🎉</div>
-
                         <h3 className="text-2xl font-bold text-emerald-900">
-                            おめでとうございます！特定技能ビザ取得の可能性が高いです。
+                            おめでとうございます！<br />特定技能ビザ取得の可能性が高いです。
                         </h3>
-
                         <p className="text-emerald-800/80 text-sm leading-relaxed max-w-2xl mx-auto">
-                            ※本ツールは一般的な要件チェックです。最終判断は個別事情や提出資料により変動します。
+                            ※本ツールは一般的な要件チェックです。最終判断は個別事情により変動します。
                         </p>
-
                         <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
                             <a
                                 href="https://calendly.com/fanvankai/30min?month=2025-12"
@@ -105,7 +107,6 @@ const VisaChecker = () => {
                             >
                                 今すぐ相談を予約する
                             </a>
-
                             <button
                                 type="button"
                                 onClick={resetAll}
@@ -119,21 +120,17 @@ const VisaChecker = () => {
             );
         }
 
-        // ====== 不合格/警告 (Warning) ======
+        // 警告（Warning）
         return (
             <div className="p-6 sm:p-8 animate-in fade-in slide-in-from-top-4 duration-500 bg-amber-50 border-t border-amber-100">
                 <div className="text-center space-y-4">
                     <div className="text-4xl mb-2">⚠️</div>
-
                     <h3 className="text-2xl font-bold text-amber-900">
-                        要件を満たしていない可能性がありますが、専門家の判断が必要です。
+                        要件を満たしていない可能性がありますが、<br />専門家の判断が必要です。
                     </h3>
-
                     <p className="text-amber-900/80 text-sm leading-relaxed max-w-2xl mx-auto">
                         不合格に見えても、職種・試験ルート・個別事情によって可能性が残るケースがあります。
-                        まずは状況を整理しましょう。
                     </p>
-
                     <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
                         <a
                             href="https://mayuha.net/contact-ja.html?subject=特定技能ビザ診断結果&result=warning"
@@ -141,7 +138,6 @@ const VisaChecker = () => {
                         >
                             無料で専門家に相談する
                         </a>
-
                         <button
                             type="button"
                             onClick={resetAll}
@@ -150,140 +146,74 @@ const VisaChecker = () => {
                             最初からやり直す
                         </button>
                     </div>
-
-                    <p className="text-amber-900/70 text-xs leading-relaxed max-w-2xl mx-auto">
-                        ※本ツールは一般的な目安です。最終判断は個別事情や提出資料により変動します。
-                    </p>
                 </div>
             </div>
         );
     };
 
+    // ====== メイン表示（ウィザード） ======
     return (
         <div className="space-y-8">
-            {/* Question Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="p-6 sm:p-8 space-y-8">
-                    <div className="text-center space-y-2">
-                        <h2 className="text-2xl font-bold text-slate-800">
-                            特定技能ビザ（1号）要件チェック
-                        </h2>
-                        <p className="text-sm text-slate-500">
-                            すべての質問に回答すると結果が表示されます。
-                        </p>
-                    </div>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden min-h-[400px] flex flex-col">
 
-                    <div className="space-y-6">
-                        {questions.map((q) => {
-                            const selected = answers[q.id];
-                            return (
-                                <div
-                                    key={q.id}
-                                    className="pb-6 border-b border-slate-100 last:border-0 last:pb-0"
-                                >
-                                    <p className="text-lg font-medium text-slate-700 mb-2">
-                                        {q.text}
-                                    </p>
-                                    {q.hint ? (
-                                        <p className="text-xs text-slate-500 mb-4">{q.hint}</p>
-                                    ) : (
-                                        <div className="mb-4" />
-                                    )}
-
-                                    <div className="flex gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleAnswer(q.id, true)}
-                                            aria-pressed={selected === true}
-                                            className={[
-                                                "flex-1 py-3 px-4 rounded-lg font-bold transition-all duration-200 border-2",
-                                                selected === true
-                                                    ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                                    : "bg-white border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600",
-                                            ].join(" ")}
-                                        >
-                                            はい
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => handleAnswer(q.id, false)}
-                                            aria-pressed={selected === false}
-                                            className={[
-                                                "flex-1 py-3 px-4 rounded-lg font-bold transition-all duration-200 border-2",
-                                                selected === false
-                                                    ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-900",
-                                            ].join(" ")}
-                                        >
-                                            いいえ
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Progress + Reset */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-                        <div className="text-sm text-slate-500">
-                            進捗：{" "}
-                            <span className="font-bold text-slate-700">
-                                {QUESTION_IDS.filter((id) => answers[id] !== null).length}/
-                                {QUESTION_IDS.length}
-                            </span>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={resetAll}
-                            className="text-sm font-bold text-slate-600 hover:text-slate-900 underline underline-offset-4"
-                        >
-                            回答をリセット
-                        </button>
-                    </div>
+                {/* プログレスバー */}
+                <div className="w-full bg-slate-100 h-2">
+                    <div
+                        className="bg-blue-600 h-2 transition-all duration-500 ease-out"
+                        style={{ width: `${progress}%` }}
+                    />
                 </div>
 
-                {/* Result Section */}
-                <ResultView />
-            </div>
+                <div className="p-6 sm:p-8 flex-1 flex flex-col justify-center">
+                    {!isFinished ? (
+                        // 質問表示モード
+                        <div className="space-y-8 animate-in fade-in duration-300">
+                            <div className="text-center space-y-2">
+                                <span className="text-blue-600 font-bold text-sm tracking-wider">
+                                    QUESTION {currentStep + 1} / {questions.length}
+                                </span>
+                                <h2 className="text-xl sm:text-2xl font-bold text-slate-800 leading-snug">
+                                    {questions[currentStep].text}
+                                </h2>
+                                {questions[currentStep].hint && (
+                                    <p className="text-sm text-slate-500 bg-slate-50 inline-block px-3 py-1 rounded-full">
+                                        {questions[currentStep].hint}
+                                    </p>
+                                )}
+                            </div>
 
-            {/* Professional Service CTA（任意：残す場合も表示は固定でOK） */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl shadow-xl overflow-hidden text-white relative">
-                <div className="absolute top-0 right-0 p-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 p-24 bg-blue-500/10 rounded-full blur-3xl -ml-12 -mb-12 pointer-events-none" />
+                            <div className="flex gap-4 max-w-md mx-auto w-full">
+                                <button
+                                    type="button"
+                                    onClick={() => handleAnswer(true)}
+                                    className="flex-1 py-4 px-6 rounded-xl font-bold text-lg bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:translate-y-0.5 transition-all"
+                                >
+                                    はい
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleAnswer(false)}
+                                    className="flex-1 py-4 px-6 rounded-xl font-bold text-lg bg-white border-2 border-slate-200 text-slate-600 hover:border-slate-400 hover:text-slate-800 transition-all"
+                                >
+                                    いいえ
+                                </button>
+                            </div>
 
-                <div className="relative p-8 sm:p-10 text-center">
-                    <div className="inline-block px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-bold tracking-wider mb-6 border border-blue-500/30">
-                        PROFESSIONAL SERVICE
-                    </div>
-
-                    <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 tracking-tight">
-                        行政書士による<br className="sm:hidden" />
-                        完全申請代行サポート
-                    </h2>
-
-                    <p className="text-slate-300 mb-8 max-w-2xl mx-auto text-lg leading-relaxed">
-                        複雑な書類作成から入国管理局への申請まで、専門家が責任を持って代行いたします。
-                        <br />
-                        許可取得に向けた最短ルートをご提案。
-                    </p>
-
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-sm mx-auto mb-8 border border-white/10">
-                        <p className="text-sm text-slate-400 mb-1">Standard Plan</p>
-                        <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-sm text-slate-300">着手金</span>
-                            <span className="text-4xl font-bold text-white">¥33,000</span>
-                            <span className="text-xl text-slate-300">〜</span>
-                            <span className="text-xs text-slate-400">(税込)</span>
+                            {currentStep > 0 && (
+                                <div className="text-center">
+                                    <button
+                                        onClick={handleBack}
+                                        className="text-slate-400 hover:text-slate-600 text-sm font-medium underline underline-offset-4"
+                                    >
+                                        前の質問に戻る
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                    </div>
-
-                    <a
-                        href="https://mayuha.net/contact-ja.html"
-                        className="inline-block w-full sm:w-auto px-10 py-4 bg-white text-slate-900 font-bold rounded-lg hover:bg-blue-50 transition-colors shadow-lg shadow-white/10"
-                    >
-                        相談予約フォームへ
-                    </a>
+                    ) : (
+                        // 結果表示モード
+                        <ResultView />
+                    )}
                 </div>
             </div>
         </div>
