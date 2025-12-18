@@ -63,10 +63,14 @@ const VisaChecker = () => {
     const resultType = isFinished ? calculateResult() : null;
 
     // Contact URL generation
+    // Contact URL generation
     const getContactUrl = (type) => {
+        if (type === 'qualified') {
+            return 'https://calendly.com/fanvankai/30min?month=2025-12';
+        }
         const subject = encodeURIComponent('特定技能ビザ診断結果');
         const paramResult = encodeURIComponent(type);
-        return `https://mayuha.net/contact/?subject=${subject}&result=${paramResult}`;
+        return `https://mayuha.net/contact-ja.html?subject=${subject}&result=${paramResult}`;
     };
 
     return (
@@ -136,8 +140,8 @@ const VisaChecker = () => {
             {isFinished && (
                 <div className="space-y-8 animate-in zoom-in-95 fade-in duration-500">
                     <div className={`rounded-2xl p-8 sm:p-10 text-center shadow-sm border ${resultType === 'qualified'
-                            ? 'bg-blue-50 border-blue-100'
-                            : 'bg-orange-50 border-orange-100' // Improved friendly colors
+                        ? 'bg-blue-50 border-blue-100'
+                        : 'bg-orange-50 border-orange-100' // Improved friendly colors
                         }`}>
                         <div className="text-6xl mb-6">
                             {resultType === 'qualified' ? '🎉' : '💡'}
@@ -165,8 +169,8 @@ const VisaChecker = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className={`inline-flex items-center justify-center px-8 py-4 rounded-full font-bold text-lg text-white shadow-lg transition-transform hover:-translate-y-1 ${resultType === 'qualified'
-                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-200'
-                                        : 'bg-gradient-to-r from-orange-400 to-orange-500 hover:shadow-orange-100' // Friendlier orange
+                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-200'
+                                    : 'bg-gradient-to-r from-orange-400 to-orange-500 hover:shadow-orange-100' // Friendlier orange
                                     }`}
                             >
                                 {resultType === 'qualified' ? '有料サポートに進む' : '無料で専門家に相談する'}
